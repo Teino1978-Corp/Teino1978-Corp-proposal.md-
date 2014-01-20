@@ -36,6 +36,8 @@ A random value used to generate the resulting hashcash value.
 
 ## Fixed Values
 
+Depending on the use case, fixed values may include such data as:
+
 ### Parameters to the hashing function
 
 Variable for the hash function. A variable-block-size function like SHA-3 would include params for block size and a number of rounds.
