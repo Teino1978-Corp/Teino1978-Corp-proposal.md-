@@ -115,3 +115,7 @@ Uses the Bitcoin double-256 hashcash function, in case you want to use something
 - How the hash of the body is determined is unspecified, as bodies are known to get mangled in mail sending.
 - How "recipients" is calculated / concatenated is undefined. (Can email addresses contain colons? What happens if a recipient is added after a message is sent)
 - Should the stamp include other values, such as the Subject, or Sender? What are the consequences of not including those values?
+
+## See Also
+
+hashcash man page: http://hashcash.org/docs/hashcash.txt
