@@ -1,9 +1,18 @@
 # Generalized Hashcash Header
 
+## History
+
+## Proposal goals
+
+- Enable some degree of modularity and interoperability for hashcash library components.
+- Specify hashcash patterns for domains beyond email.
+- Allow individual components, such as the hashing function, to change without breaking orthogonal components, such as calculation and valuation.
+
 ## BNF
 
     <hashcash-header> ::= <profile> ":" <fixed-value> ":" <counter>
-    <fixed-value> ::= <params> ":" <resource>
+
+Any colons between the first and the last are part of the "fixed-value".
 
 ## Description
 
@@ -17,37 +26,49 @@ Valuation and validation of the calculated result are left to the relevant inter
 
 What algorithm is being used to generate the hashcash. This supersedes hashcash 0 and 1's "version" parameter.
 
-### params
+### fixed-value
 
-Any parameters to the hashcash function. For profiles "0" and "1", this refers to the number of bits at the beginning of the resulting SHA-1 function asserted to be 0; a variable-memory-and-calculation intensive function like bcrypt may include it
-
-### resource
-
-A unique identifier for the corresponding hashcash value. Any number of colons past the second and before the last become part of the resource name.
-
-Things that may be part of a resource:
-
-- sender address for email.
-- date the stamp was calculated.
-- hash of a message's body.
-- a random identifier for calculating multiple discrete values.
-- salt/nonce required by a challenge.
-  - If a salt has a special functionality in the design of a hash function, it may be included as part of the "params" instead.
+A collection of parameters for the hash function specified in "profile" and other values involved in Valuation and Validation. See the "Fixed Values" section below.
 
 ### counter
 
 A random value used to generate the resulting hashcash value.
 
+## Fixed Values
+
+### Parameters to the hashing function
+
+Variable for the hash function. A variable-block-size function like SHA-3 would include params for block size and a number of rounds.
+
+### Guarantees about the resulting value
+
+For the original hashcash profiles "0" and "1", this refers to the number of bits at the beginning of the resulting SHA-1 function asserted to be 0.
+
+For the "bitcoin" profile, the result is asserted to be below a certain target: see https://en.bitcoin.it/wiki/Target for more details.
+
+### Salt
+
+A nonce / salt may be required as part of a challenge (see Headers and Usages below).
+
+### Associated resource
+
+A hashcash value may be associated with a specific resource, such as the address for the sender of an email, or the content of a request.
+
+### Unique identifier
+
+A random value appended to a hashcash fixed-value to differentiate it from other hashcash calculations. Used for the original (X-Hashcash) Stamp profile, where stamps were pre-calculated.
+
 ## Headers and Usages
 
-In contrast to Hashcash versions 0 and 1 which used a generalized "X-Hashcash" header, Generalized Hashcash functions should use more specific headers that describe how to valuate and validate a corresponding resource, relative to the "resource" and "params" strings.
+In contrast to Hashcash versions 0 and 1 which used a generalized "X-Hashcash" header, Generalized Hashcash functions should use more specific headers that describe how to interpret the fixed-value to valuate and validate a corresponding resource.
 
 Generalized Hashcash headers begin with the name "Hashcash" rather than "X-Hashcash", in accordance with RFC6648 (BCP178).
 
 ### Old Stamps (X-Hashcash)
 
-    <resource> ::= <date> ":" <old-resource> ":" <ext> ? ":" <rand>
-    <ext> is ignored in both "0" and "1" and should be omitted.
+    <fixed-value> ::= <bits> ":" <date> ":" <resource> ":" <ext> ? ":" <rand>
+
+(While syntactically specified, the "ext" value was not used in "0", and was explicitly ignored in the specification of profile "1".)
 
 Original Hashcash stamps were designed to be pre-computed ahead of time and then attached to a message, with "old-resource" in practice effectively being the sender's email address, and "rand" being used 
 
@@ -67,9 +88,9 @@ As yet unspecified: see [Hashcash-for-Node](https://github.com/base698/Hashcash-
 
 ## Valuation and Validation
 
-An email system like SpamAssassin may judge mail using a "bitcoin-stamp" header to have a value relative to its age and difficulty relative to the power of the Bitcoin network at the time the message was received, and use that valuation to adjust the calculated "spamminess" of a message by a number of other factors.
+An email system like SpamAssassin may judge mail using a "Hashcash-Stamp" header using the "bitcoin" profile to have a value relative to its age and difficulty relative to the power of the Bitcoin network at the time the message was received, and use that valuation to adjust the calculated "spamminess" of a message by a number of other factors.
 
-In contrast, a system using Hashcash to
+In contrast, a system using Hashcash to validate requests may issue a "Hashcash-Challenge" header with a given salt and target, and drop any response that comes back with a "Hashcash-Response" that comes back too late or misses the target. 
 
 ## Profiles
 
@@ -86,9 +107,6 @@ Uses the Bitcoin double-256 hashcash function, in case you want to use something
 ### "sha3"
 
 ## Open Issues
-
-- Should parameters used exclusively for V&V really be part of params?
-  - Perhaps "params" should be included in a different way (eg. dollars-sign-seperated after the scheme name, as per /etc/shadow), and "resource" then controls all V&V-relevant info.
 
 ### Hashcash-Stamp
 
